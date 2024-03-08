@@ -32,6 +32,7 @@ with open(os.path.join(here, 'README.rst')) as f:
 
 setup(
     name="kafka-python-ng",
+    python_requires=">=3.8",
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
     tests_require=test_require,
