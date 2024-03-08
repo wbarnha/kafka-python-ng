@@ -127,13 +127,14 @@ jobs:
           - "2.4.0"
           - "2.5.0"
           - "2.6.0"
+        python-version: ['${{ env.PYTHON_LATEST }}']
         experimental: [false]
         include:
           - kafka-version: '0.8.2.2'
             experimental: true
           - kafka-version: '0.8.2.2'
             experimental: false
-            PYTHON_LATEST: "3.11"
+            python-version: "3.11"
     continue-on-error: ${{ matrix.experimental }}
     steps:
       - name: Checkout the source code
@@ -148,7 +149,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_LATEST }}
+          python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: |
             requirements-dev.txt
