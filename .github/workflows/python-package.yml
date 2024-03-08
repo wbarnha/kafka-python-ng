@@ -57,6 +57,7 @@ jobs:
       - build-sdist
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
