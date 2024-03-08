@@ -131,6 +131,9 @@ jobs:
         include:
           - kafka-version: '0.8.2.2'
             experimental: true
+          - kafka-version: '0.8.2.2'
+            experimental: false
+            PYTHON_LATEST: "3.11"
     continue-on-error: ${{ matrix.experimental }}
     steps:
       - name: Checkout the source code
