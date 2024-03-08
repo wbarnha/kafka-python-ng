@@ -1,10 +1,16 @@
 from __future__ import absolute_import
 
+import platform
+import sys
+
 import pytest
 
+
 from kafka.partitioner import DefaultPartitioner, murmur2
+from test.testutil import env_kafka_version, random_string
 
 
+@pytest.mark.skipif(env_kafka_version() <= (0, 8, 2) and sys.version_info > (3, 11), reason="Kafka 0.8.2 and earlier not supported by 3.12")
 def test_default_partitioner():
     partitioner = DefaultPartitioner()
     all_partitions = available = list(range(100))
@@ -21,6 +27,7 @@ def test_default_partitioner():
     assert partitioner(None, all_partitions, []) in all_partitions
 
 
+@pytest.mark.skipif(env_kafka_version() <= (0, 8, 2) and sys.version_info > (3, 11), reason="Kafka 0.8.2 and earlier not supported by 3.12")
 @pytest.mark.parametrize("bytes_payload,partition_number", [
     (b'', 681), (b'a', 524), (b'ab', 434), (b'abc', 107), (b'123456789', 566),
     (b'\x00 ', 742)
