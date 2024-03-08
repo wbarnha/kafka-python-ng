@@ -127,7 +127,7 @@ jobs:
           - "2.4.0"
           - "2.5.0"
           - "2.6.0"
-        python-version: ['${{ env.PYTHON_LATEST }}']
+        python-version: ['3.12']
         experimental: [false]
         include:
           - kafka-version: '0.8.2.2'
@@ -135,6 +135,8 @@ jobs:
           - kafka-version: '0.8.2.2'
             experimental: false
             python-version: "3.11"
+    env:
+      PYTHON_LATEST: ${{ matrix.python-version }}
     continue-on-error: ${{ matrix.experimental }}
     steps:
       - name: Checkout the source code
