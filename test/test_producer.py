@@ -11,6 +11,7 @@ from kafka.producer.buffer import SimpleBufferPool
 from test.testutil import env_kafka_version, random_string
 
 
+@pytest.mark.skipif(env_kafka_version() <= (0, 8, 2) and sys.version_info > (3, 11), reason="Kafka 0.8.2 and earlier not supported by 3.12")
 def test_buffer_pool():
     pool = SimpleBufferPool(1000, 1000)
 
