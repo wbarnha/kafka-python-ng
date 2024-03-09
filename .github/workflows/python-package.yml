@@ -132,7 +132,9 @@ jobs:
         include:
           - kafka-version: '0.8.2.2'
             experimental: true
+            python-version: "3.12"
           - kafka-version: '0.8.2.2'
+            experimental: false
             python-version: "3.11"
     env:
       PYTHON_LATEST: ${{ matrix.python-version }}
