@@ -135,7 +135,7 @@ jobs:
             python-version: "3.12"
           - kafka-version: '0.8.2.2'
             experimental: false
-            python-version: "3.11"
+            python-version: "3.10"
     env:
       PYTHON_LATEST: ${{ matrix.python-version }}
     continue-on-error: ${{ matrix.experimental }}
