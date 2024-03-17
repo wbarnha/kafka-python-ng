@@ -7,6 +7,44 @@ import string
 from kafka.vendor.six.moves import urllib
 
 
+def try_authenticate(self, future):
+    session = BotoSession()
+    credentials = session.get_credentials().get_frozen_credentials()
+    client = AwsMskIamClient(
+        host=self.host,
+        access_key=credentials.access_key,
+        secret_key=credentials.secret_key,
+        region=session.get_config_variable('region'),
+        token=credentials.token,
+    )
+    
+    msg = client.first_message()
+    size = Int32.encode(len(msg))
+
+    err = None
+    close = False
+    with self._lock:
+        if not self._can_send_recv():
+            err = Errors.NodeNotReadyError(str(self))
+            close = False
+        else:
+            try:
+                self._send_bytes_blocking(size + msg)
+                data = self._recv_bytes_blocking(4)
+                data = self._recv_bytes_blocking(struct.unpack('4B', data)[-1])
+            except (ConnectionError, TimeoutError) as e:
+                log.exception("%s: Error receiving reply from server", self)
+                err = Errors.KafkaConnectionError("%s: %s" % (self, e))
+                close = True
+
+    if err is not None:
+        if close:
+            self.close(error=err)
+        return future.failure(err)
+
+    log.info('%s: Authenticated via AWS_MSK_IAM %s', self, data.decode('utf-8'))
+    return future.success(True)
+       
 class AwsMskIamClient:
     UNRESERVED_CHARS = string.ascii_letters + string.digits + '-._~'
 
