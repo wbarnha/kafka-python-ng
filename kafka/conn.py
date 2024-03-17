@@ -261,9 +261,14 @@ class BrokerConnection(object):
         assert self.config['security_protocol'] in self.SECURITY_PROTOCOLS, (
             'security_protocol must be in ' + ', '.join(self.SECURITY_PROTOCOLS))
 
+
         if self.config['security_protocol'] in ('SSL', 'SASL_SSL'):
             assert ssl_available, "Python wasn't built with SSL support"
 
+        if self.config['sasl_mechanism'] == 'AWS_MSK_IAM':
+            assert BotoSession is not None, 'AWS_MSK_IAM requires the "botocore" package'
+            assert self.config['security_protocol'] == 'SASL_SSL', 'AWS_MSK_IAM requires SASL_SSL'
+        
         if self.config['security_protocol'] in ('SASL_PLAINTEXT', 'SASL_SSL'):
             assert self.config['sasl_mechanism'] in sasl.MECHANISMS, (
                 'sasl_mechanism must be one of {}'.format(', '.join(sasl.MECHANISMS.keys()))

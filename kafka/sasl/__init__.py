@@ -1,6 +1,6 @@
 import logging
 
-from kafka.sasl import gssapi, oauthbearer, plain, scram
+from kafka.sasl import gssapi, oauthbearer, plain, scram, msk
 
 log = logging.getLogger(__name__)
 
@@ -10,6 +10,7 @@ MECHANISMS = {
     'PLAIN': plain,
     'SCRAM-SHA-256': scram,
     'SCRAM-SHA-512': scram,
+    'AWS_MSK_IAM', msk,
 }
 
 
