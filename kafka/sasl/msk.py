@@ -11,6 +11,7 @@ from kafka.vendor.six.moves import urllib
 from kafka.protocol.types import Int32
 import kafka.errors as Errors
 
+import boto3
 from botocore.session import Session as BotoSession
 
 
