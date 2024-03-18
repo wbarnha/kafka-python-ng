@@ -85,6 +85,8 @@ jobs:
           cache: pip
           cache-dependency-path: |
             requirements-dev.txt
+      - id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
       - name: Check Java installation
         run: source travis_java_install.sh
       - name: Pull Kafka releases
@@ -153,6 +155,8 @@ jobs:
           cache: pip
           cache-dependency-path: |
             requirements-dev.txt
+      - id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
       - name: Pull Kafka releases
         run: ./build_integration.sh
         env:
