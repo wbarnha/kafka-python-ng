@@ -10,7 +10,7 @@ MECHANISMS = {
     'PLAIN': plain,
     'SCRAM-SHA-256': scram,
     'SCRAM-SHA-512': scram,
-    'AWS_MSK_IAM', msk,
+    'AWS_MSK_IAM': msk,
 }
 
 
