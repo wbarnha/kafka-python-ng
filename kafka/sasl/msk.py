@@ -3,8 +3,16 @@ import hashlib
 import hmac
 import json
 import string
+import struct
+import logging
+
 
 from kafka.vendor.six.moves import urllib
+from kafka.protocol.types import Int32
+import kafka.errors as Errors
+
+from botocore.session import Session as BotoSession
+
 
 
 def try_authenticate(self, future):
@@ -33,7 +41,7 @@ def try_authenticate(self, future):
                 data = self._recv_bytes_blocking(4)
                 data = self._recv_bytes_blocking(struct.unpack('4B', data)[-1])
             except (ConnectionError, TimeoutError) as e:
-                log.exception("%s: Error receiving reply from server", self)
+                logging.exception("%s: Error receiving reply from server", self)
                 err = Errors.KafkaConnectionError("%s: %s" % (self, e))
                 close = True
 
@@ -42,9 +50,10 @@ def try_authenticate(self, future):
             self.close(error=err)
         return future.failure(err)
 
-    log.info('%s: Authenticated via AWS_MSK_IAM %s', self, data.decode('utf-8'))
+    logging.info('%s: Authenticated via AWS_MSK_IAM %s', self, data.decode('utf-8'))
     return future.success(True)
-       
+
+
 class AwsMskIamClient:
     UNRESERVED_CHARS = string.ascii_letters + string.digits + '-._~'
 
