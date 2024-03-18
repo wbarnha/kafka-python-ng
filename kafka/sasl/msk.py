@@ -42,7 +42,7 @@ def try_authenticate(self, future):
                 data = self._recv_bytes_blocking(struct.unpack('4B', data)[-1])
             except (ConnectionError, TimeoutError) as e:
                 logging.exception("%s: Error receiving reply from server", self)
-                err = Errors.KafkaConnectionError("%s: %s" % (self, e))
+                err = Errors.KafkaConnectionError(f"{self}: {e}")
                 close = True
 
     if err is not None:
