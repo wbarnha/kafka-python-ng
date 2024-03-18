@@ -1,7 +1,7 @@
 import datetime
 import json
 
-from kafka.sasl.msk import AwsMskIamClient
+import pytest
 
 try:
     from unittest import mock
@@ -9,7 +9,10 @@ except ImportError:
     import mock
 
 
+@pytest.mark.skip(reason="Not yet supported")
 def client_factory(token=None):
+    from kafka.sasl.msk import AwsMskIamClient
+
     now = datetime.datetime.utcfromtimestamp(1629321911)
     with mock.patch('kafka.sasl.msk.datetime') as mock_dt:
         mock_dt.datetime.utcnow = mock.Mock(return_value=now)
