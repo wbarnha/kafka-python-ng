@@ -11,9 +11,10 @@ from kafka.vendor.six.moves import urllib
 from kafka.protocol.types import Int32
 import kafka.errors as Errors
 
+from botocore.session import Session as BotoSession  # importing it in advance is not an option apparently...
+
 
 def try_authenticate(self, future):
-    from botocore.session import Session as BotoSession  # importing it in advance is not an option apparently...
 
     session = BotoSession()
     credentials = session.get_credentials().get_frozen_credentials()

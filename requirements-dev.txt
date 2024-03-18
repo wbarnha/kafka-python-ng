@@ -15,5 +15,4 @@ Sphinx
 sphinx-rtd-theme
 tox
 xxhash
-boto3[crt]
 botocore
