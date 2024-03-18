@@ -101,6 +101,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install tox tox-gh-actions
           pip install .
+          pip install awscli --force-reinstall --upgrade
           pip install -r requirements-dev.txt
       - name: Test with tox
         run: tox
@@ -170,6 +171,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install tox tox-gh-actions
           pip install .
+          pip install awscli --force-reinstall --upgrade
           pip install -r requirements-dev.txt
       - name: Test with tox
         run: tox
