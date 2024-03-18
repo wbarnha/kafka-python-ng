@@ -85,7 +85,7 @@ def try_authenticate(conn, future):
 
             except (ConnectionError, TimeoutError) as e:
                 log.exception("%s: Error receiving reply from server",  conn)
-                err = Errors.KafkaConnectionError("%s: %s" % (conn, e))
+                err = Errors.KafkaConnectionError(f"{conn}: {e}")
                 close = True
             except Exception as e:
                 err = e
