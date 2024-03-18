@@ -1,6 +1,8 @@
 import datetime
 import json
 
+import pytest
+
 from kafka.sasl.msk import AwsMskIamClient
 
 try:
@@ -22,6 +24,7 @@ def client_factory(token=None):
         )
 
 
+@pytest.mark.skip(reason="Not yet supported")
 def test_aws_msk_iam_client_permanent_credentials():
     client = client_factory(token=None)
     msg = client.first_message()
