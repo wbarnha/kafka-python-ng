@@ -4,6 +4,7 @@ from typing import List, Union
 from kafka.protocol.abstract import AbstractType
 from kafka.protocol.types import Schema
 
+
 from kafka.util import WeakMethod
 
 
@@ -43,7 +44,7 @@ class Struct(AbstractType):
         )
 
     @classmethod
-    def decode(cls, data: Union[BytesIO, bytes]) -> Union['ConsumerProtocolMemberAssignment', 'ConsumerProtocolMemberMetadata', 'FetchResponse_v0', 'StickyAssignorUserDataV1']:
+    def decode(cls, data: Union[BytesIO, bytes]) -> "Struct":
         if isinstance(data, bytes):
             data = BytesIO(data)
         return cls(*[field.decode(data) for field in cls.SCHEMA.fields])
@@ -62,7 +63,7 @@ class Struct(AbstractType):
     def __hash__(self):
         return hash(self.encode())
 
-    def __eq__(self, other: Union['ConsumerProtocolMemberAssignment', 'ConsumerProtocolMemberMetadata', 'MetadataRequest_v0', 'Message']) -> bool:
+    def __eq__(self, other: "Struct") -> bool:
         if self.SCHEMA != other.SCHEMA:
             return False
         for attr in self.SCHEMA.names:
