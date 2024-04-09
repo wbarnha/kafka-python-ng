@@ -257,7 +257,7 @@ class KafkaClient:
         conn = self._conns[node_id]
         return conn.disconnected() and not conn.blacked_out()
 
-    def _conn_state_change(self, node_id, sock, conn):
+    def _conn_state_change(self, node_id, sock, conn, ssl_upgraded = False):
         with self._lock:
             if conn.connecting():
                 # SSL connections can enter this state 2x (second during Handshake)
@@ -266,7 +266,11 @@ class KafkaClient:
                 try:
                     self._selector.register(sock, selectors.EVENT_WRITE, conn)
                 except KeyError:
-                    self._selector.modify(sock, selectors.EVENT_WRITE, conn)
+                    if ssl_upgraded:
+                        self._selector.unregister(sock)
+                        self._selector.register(sock, selectors.EVENT_WRITE, conn)
+                    else:
+                        self._selector.modify(sock, selectors.EVENT_WRITE, conn)
 
                 if self.cluster.is_bootstrap(node_id):
                     self._last_bootstrap = time.time()
