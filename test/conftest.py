@@ -18,7 +18,9 @@ def zookeeper():
 @pytest.fixture(scope="module")
 def kafka_broker(kafka_broker_factory):
     """Return a Kafka broker fixture"""
-    return kafka_broker_factory()[0]
+    # return kafka_broker_factory()[0]
+    return kafka_broker_factory(transport='SSL')[0]
+    # return kafka_broker_factory(transport='SSL', sasl_mechanism='PLAIN')[0]
 
 
 @pytest.fixture(scope="module")

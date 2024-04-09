@@ -38,7 +38,7 @@ def gen_ssl_resources(directory):
 
     # Step 1
     keytool -keystore kafka.server.keystore.jks -alias localhost -validity 1 \
-      -genkey -storepass foobar -keypass foobar \
+      -genkey -keyalg RSA -storepass foobar -keypass foobar \
       -dname "CN=localhost, OU=kafka-python, O=kafka-python, L=SF, ST=CA, C=US" \
       -ext SAN=dns:localhost
 
@@ -410,6 +410,11 @@ class KafkaFixture(Fixture):
         jaas_conf = self.tmp_dir.join("kafka_server_jaas.conf")
         properties_template = self.test_resource("kafka.properties")
         jaas_conf_template = self.test_resource("kafka_server_jaas.conf")
+        # ssl_keystore = self.tmp_dir.join("kafka.server.keystore.jks")
+        # ssl_trustore = self.tmp_dir.join("kafka.server.keystore.jks")
+        self.ssl_dir = self.tmp_dir
+        gen_ssl_resources(self.tmp_dir.strpath) 
+        print(f"---- xiong temp {self.tmp_dir}")
 
         args = self.kafka_run_class_args("kafka.Kafka", properties.strpath)
         env = self.kafka_run_class_env()
@@ -516,7 +521,7 @@ class KafkaFixture(Fixture):
     def close(self):
         self.stop()
         if self.tmp_dir is not None:
-            self.tmp_dir.remove()
+            # self.tmp_dir.remove()
             self.tmp_dir = None
         self.out("Done!")
 
@@ -641,6 +646,8 @@ class KafkaFixture(Fixture):
             if self.sasl_mechanism in ('PLAIN', 'SCRAM-SHA-256', 'SCRAM-SHA-512'):
                 params.setdefault('sasl_plain_username', self.broker_user)
                 params.setdefault('sasl_plain_password', self.broker_password)
+        params.setdefault("ssl_cafile", self.ssl_dir.join('ca-cert').strpath)
+        params.setdefault("security_protocol", "SSL")
         return params
 
     @staticmethod
