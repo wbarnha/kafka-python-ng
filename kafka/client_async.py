@@ -257,7 +257,7 @@ class KafkaClient:
         conn = self._conns[node_id]
         return conn.disconnected() and not conn.blacked_out()
 
-    def _conn_state_change(self, node_id, sock, conn, ssl_upgraded = False):
+    def _conn_state_change(self, node_id, sock, conn):
         with self._lock:
             if conn.connecting():
                 # SSL connections can enter this state 2x (second during Handshake)
@@ -266,7 +266,10 @@ class KafkaClient:
                 try:
                     self._selector.register(sock, selectors.EVENT_WRITE, conn)
                 except KeyError:
-                    if ssl_upgraded:
+                    # SSL detaches the original socket, and transfers the
+                    # underlying file descriptor to a new SSLSocket. We should
+                    # explicitly unregister the original socket.
+                    if conn.state == ConnectionStates.HANDSHAKE:
                         self._selector.unregister(sock)
                         self._selector.register(sock, selectors.EVENT_WRITE, conn)
                     else:
