@@ -894,7 +894,6 @@ class KafkaClient:
             # It is possible that least_loaded_node falls back to bootstrap,
             # which can block for an increasing backoff period
             try_node = node_id or self.least_loaded_node()
-            import sys
             if try_node is None:
                 self._lock.release()
                 raise Errors.NoBrokersAvailable()

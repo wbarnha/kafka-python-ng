@@ -15,15 +15,10 @@ def zookeeper():
     zk_instance.close()
 
 
-# Right now, only test SSL for 2.6.0.
-# TODO: enable it for all Kafka versions.
-_transport_param = ["PLAINTEXT", "SSL"] if env_kafka_version() == (2, 6, 0) else ["PLAINTEXT"]
-
-
-@pytest.fixture(scope="module", params=_transport_param)
-def kafka_broker(kafka_broker_factory, request):
+@pytest.fixture(scope="module")
+def kafka_broker(kafka_broker_factory):
     """Return a Kafka broker fixture"""
-    return kafka_broker_factory(transport=request.param)[0]
+    return kafka_broker_factory()[0]
 
 
 @pytest.fixture(scope="module")
