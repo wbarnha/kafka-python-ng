@@ -13,6 +13,7 @@ def ssl_kafka(request, kafka_broker_factory):
     return kafka_broker_factory(transport="SSL")[0]
 
 
+@pytest.mark.skipif(env_kafka_version() < (0, 10), reason="Inter broker SSL was implemented at version 0.9")
 def test_admin(request, ssl_kafka):
     topic_name = special_to_underscore(request.node.name + random_string(4))
     admin, = ssl_kafka.get_admin_clients(1)
@@ -20,6 +21,7 @@ def test_admin(request, ssl_kafka):
     assert topic_name in ssl_kafka.get_topic_names()
 
 
+@pytest.mark.skipif(env_kafka_version() < (0, 10), reason="Inter broker SSL was implemented at version 0.9")
 def test_produce_and_consume(request, ssl_kafka):
     topic_name = special_to_underscore(request.node.name + random_string(4))
     ssl_kafka.create_topics([topic_name], num_partitions=2)
@@ -47,6 +49,7 @@ def test_produce_and_consume(request, ssl_kafka):
     assert_message_count(messages[1], 50)
 
 
+@pytest.mark.skipif(env_kafka_version() < (0, 10), reason="Inter broker SSL was implemented at version 0.9")
 def test_client(request, ssl_kafka):
     topic_name = special_to_underscore(request.node.name + random_string(4))
     ssl_kafka.create_topics([topic_name], num_partitions=1)

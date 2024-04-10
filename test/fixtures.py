@@ -374,11 +374,13 @@ class KafkaFixture(Fixture):
         return self.sasl_mechanism is not None
 
     def _listeners_config(self):
+        return f"{self.transport}://{self.host}:{self.port}"
         if self.ssl_port:
             return f"PLAINTEXT://{self.host}:{self.port},{self.transport}://{self.host}:{self.ssl_port}"
         return f"{self.transport}://{self.host}:{self.port}"
     
     def _advertised_listeners_config(self):
+        return f"{self.transport}://{self.host}:{self.port}"
         if self.ssl_port:
             return f"PLAINTEXT://{self.host}:{self.port},{self.transport}://{self.host}:{self.ssl_port}"
         return f"{self.transport}://{self.host}:{self.port}"
@@ -386,7 +388,8 @@ class KafkaFixture(Fixture):
     def bootstrap_server(self):
         port = self.port
         if self.transport in ["SASL_SSL", "SSL"]:
-            port = self.ssl_port
+            # port = self.ssl_port
+            pass
         assert port
         return '%s:%d' % (self.host, port)
 
