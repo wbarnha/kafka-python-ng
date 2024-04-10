@@ -90,13 +90,11 @@ class SpawnedService(threading.Thread):
             if self.child.stdout in rds:
                 line = self.child.stdout.readline().decode('utf-8').rstrip()
                 if line:
-                    print(line)
                     self.captured_stdout.append(line)
 
             if self.child.stderr in rds:
                 line = self.child.stderr.readline().decode('utf-8').rstrip()
                 if line:
-                    print(line)
                     self.captured_stderr.append(line)
 
             if self.child.poll() is not None:

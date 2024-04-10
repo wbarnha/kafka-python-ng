@@ -281,7 +281,6 @@ class KafkaFixture(Fixture):
 
         self.host = host
         self.port = port
-        self.ssl_port = None
 
         self.broker_id = broker_id
         self.auto_create_topic = auto_create_topic
@@ -373,25 +372,8 @@ class KafkaFixture(Fixture):
     def sasl_enabled(self):
         return self.sasl_mechanism is not None
 
-    def _listeners_config(self):
-        return f"{self.transport}://{self.host}:{self.port}"
-        if self.ssl_port:
-            return f"PLAINTEXT://{self.host}:{self.port},{self.transport}://{self.host}:{self.ssl_port}"
-        return f"{self.transport}://{self.host}:{self.port}"
-    
-    def _advertised_listeners_config(self):
-        return f"{self.transport}://{self.host}:{self.port}"
-        if self.ssl_port:
-            return f"PLAINTEXT://{self.host}:{self.port},{self.transport}://{self.host}:{self.ssl_port}"
-        return f"{self.transport}://{self.host}:{self.port}"
-
     def bootstrap_server(self):
-        port = self.port
-        if self.transport in ["SASL_SSL", "SSL"]:
-            # port = self.ssl_port
-            pass
-        assert port
-        return '%s:%d' % (self.host, port)
+        return '%s:%d' % (self.host, self.port)
 
     def kafka_run_class_env(self):
         env = super(KafkaFixture, self).kafka_run_class_env()
@@ -451,10 +433,6 @@ class KafkaFixture(Fixture):
             # unless the fixture was passed a specific port
             if auto_port:
                 self.port = get_open_port()
-            if self.transport in ["SSL", "SASL_SSL"]:
-                self.ssl_port = get_open_port()
-            self.listeners_config = self._listeners_config()
-            self.advertised_listeners_config = self._advertised_listeners_config()
             self.out('Attempting to start on port %d (try #%d)' % (self.port, tries))
             self.render_template(properties_template, properties, vars(self))
 
@@ -540,7 +518,7 @@ class KafkaFixture(Fixture):
     def close(self):
         self.stop()
         if self.tmp_dir is not None:
-            # self.tmp_dir.remove()
+            self.tmp_dir.remove()
             self.tmp_dir = None
         self.out("Done!")
 
