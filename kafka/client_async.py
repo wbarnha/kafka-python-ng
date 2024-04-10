@@ -359,7 +359,6 @@ class KafkaClient:
         return False
 
     def _maybe_connect(self, node_id):
-        # TEST
         """Idempotent non-blocking connection attempt to the given node id."""
         with self._lock:
             conn = self._conns.get(node_id)
@@ -753,7 +752,6 @@ class KafkaClient:
         """
         nodes = [broker.nodeId for broker in self.cluster.brokers()]
         random.shuffle(nodes)
-        print(f"xxxx xiong {nodes}")
 
         inflight = float('inf')
         found = None
@@ -897,10 +895,8 @@ class KafkaClient:
             # which can block for an increasing backoff period
             try_node = node_id or self.least_loaded_node()
             import sys
-            print(f"xxxx xiong {node_id}, {self.least_loaded_node()}, {try_node}", file=sys. stderr)
             if try_node is None:
                 self._lock.release()
-                # breakpoint()
                 raise Errors.NoBrokersAvailable()
             self._maybe_connect(try_node)
             conn = self._conns[try_node]

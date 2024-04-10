@@ -281,6 +281,7 @@ class KafkaFixture(Fixture):
 
         self.host = host
         self.port = port
+        self.ssl_port = None
 
         self.broker_id = broker_id
         self.auto_create_topic = auto_create_topic
@@ -289,7 +290,7 @@ class KafkaFixture(Fixture):
             self.sasl_mechanism = sasl_mechanism.upper()
         else:
             self.sasl_mechanism = None
-        self.ssl_dir = self.test_resource('ssl')
+        self.ssl_dir = None
 
         # TODO: checking for port connection would be better than scanning logs
         # until then, we need the pattern to work across all supported broker versions
@@ -372,8 +373,22 @@ class KafkaFixture(Fixture):
     def sasl_enabled(self):
         return self.sasl_mechanism is not None
 
+    def _listeners_config(self):
+        if self.ssl_port:
+            return f"PLAINTEXT://{self.host}:{self.port},{self.transport}://{self.host}:{self.ssl_port}"
+        return f"{self.transport}://{self.host}:{self.port}"
+    
+    def _advertised_listeners_config(self):
+        if self.ssl_port:
+            return f"PLAINTEXT://{self.host}:{self.port},{self.transport}://{self.host}:{self.ssl_port}"
+        return f"{self.transport}://{self.host}:{self.port}"
+
     def bootstrap_server(self):
-        return '%s:%d' % (self.host, self.port)
+        port = self.port
+        if self.transport in ["SASL_SSL", "SSL"]:
+            port = self.ssl_port
+        assert port
+        return '%s:%d' % (self.host, port)
 
     def kafka_run_class_env(self):
         env = super(KafkaFixture, self).kafka_run_class_env()
@@ -410,11 +425,8 @@ class KafkaFixture(Fixture):
         jaas_conf = self.tmp_dir.join("kafka_server_jaas.conf")
         properties_template = self.test_resource("kafka.properties")
         jaas_conf_template = self.test_resource("kafka_server_jaas.conf")
-        # ssl_keystore = self.tmp_dir.join("kafka.server.keystore.jks")
-        # ssl_trustore = self.tmp_dir.join("kafka.server.keystore.jks")
         self.ssl_dir = self.tmp_dir
-        gen_ssl_resources(self.tmp_dir.strpath) 
-        print(f"---- xiong temp {self.tmp_dir}")
+        gen_ssl_resources(self.ssl_dir.strpath) 
 
         args = self.kafka_run_class_args("kafka.Kafka", properties.strpath)
         env = self.kafka_run_class_env()
@@ -436,6 +448,10 @@ class KafkaFixture(Fixture):
             # unless the fixture was passed a specific port
             if auto_port:
                 self.port = get_open_port()
+            if self.transport in ["SSL", "SASL_SSL"]:
+                self.ssl_port = get_open_port()
+            self.listeners_config = self._listeners_config()
+            self.advertised_listeners_config = self._advertised_listeners_config()
             self.out('Attempting to start on port %d (try #%d)' % (self.port, tries))
             self.render_template(properties_template, properties, vars(self))
 
@@ -646,8 +662,9 @@ class KafkaFixture(Fixture):
             if self.sasl_mechanism in ('PLAIN', 'SCRAM-SHA-256', 'SCRAM-SHA-512'):
                 params.setdefault('sasl_plain_username', self.broker_user)
                 params.setdefault('sasl_plain_password', self.broker_password)
-        params.setdefault("ssl_cafile", self.ssl_dir.join('ca-cert').strpath)
-        params.setdefault("security_protocol", "SSL")
+        if self.transport in ["SASL_SSL", "SSL"]:
+            params.setdefault("ssl_cafile", self.ssl_dir.join('ca-cert').strpath)
+            params.setdefault("security_protocol", self.transport)
         return params
 
     @staticmethod
