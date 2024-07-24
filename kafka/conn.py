@@ -23,6 +23,9 @@ from kafka.protocol.produce import ProduceRequest
 from kafka.protocol.metadata import MetadataRequest
 from kafka.protocol.fetch import FetchRequest
 from kafka.protocol.parser import KafkaProtocol
+from kafka.protocol.types import Int32, Int8
+from kafka.scram import ScramClient
+from kafka.socks5_wrapper import Socks5Wrapper
 from kafka.version import __version__
 
 
@@ -178,6 +181,7 @@ class BrokerConnection:
             sasl mechanism handshake. Default: one of bootstrap servers
         sasl_oauth_token_provider (AbstractTokenProvider): OAuthBearer token provider
             instance. (See kafka.oauth.abstract). Default: None
+        socks5_proxy (str): Socks5 proxy url. Default: None
     """
 
     DEFAULT_CONFIG = {
@@ -212,7 +216,8 @@ class BrokerConnection:
         'sasl_plain_password': None,
         'sasl_kerberos_service_name': 'kafka',
         'sasl_kerberos_domain_name': None,
-        'sasl_oauth_token_provider': None
+        'sasl_oauth_token_provider': None,
+        'socks5_proxy': None,
     }
     SECURITY_PROTOCOLS = ('PLAINTEXT', 'SSL', 'SASL_PLAINTEXT', 'SASL_SSL')
 
@@ -223,6 +228,7 @@ class BrokerConnection:
         self._sock_afi = afi
         self._sock_addr = None
         self._api_versions = None
+        self._socks5_proxy = None
 
         self.config = copy.copy(self.DEFAULT_CONFIG)
         for key in self.config:
@@ -350,7 +356,11 @@ class BrokerConnection:
                 log.debug('%s: creating new socket', self)
                 assert self._sock is None
                 self._sock_afi, self._sock_addr = next_lookup
-                self._sock = socket.socket(self._sock_afi, socket.SOCK_STREAM)
+                if self.config["socks5_proxy"] is not None:
+                    self._socks5_proxy = Socks5Wrapper(self.config["socks5_proxy"], self.afi)
+                    self._sock = self._socks5_proxy.socket(self._sock_afi, socket.SOCK_STREAM)
+                else:
+                    self._sock = socket.socket(self._sock_afi, socket.SOCK_STREAM)
 
             for option in self.config['socket_options']:
                 log.debug('%s: setting socket option %s', self, option)
@@ -368,8 +378,11 @@ class BrokerConnection:
             # to check connection status
             ret = None
             try:
-                ret = self._sock.connect_ex(self._sock_addr)
-            except OSError as err:
+                if self._socks5_proxy:
+                    ret = self._socks5_proxy.connect_ex(self._sock_addr)
+                else:
+                    ret = self._sock.connect_ex(self._sock_addr)
+            except socket.error as err:
                 ret = err.errno
 
             # Connection succeeded
