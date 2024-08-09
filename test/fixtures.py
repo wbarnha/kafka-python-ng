@@ -203,12 +203,13 @@ class ZookeeperFixture(Fixture):
         env = self.kafka_run_class_env()
 
         # Party!
-        timeout = 5
-        max_timeout = 120
+        timeout = 5 * float(os.environ.get('RETRY_TIMEOUT_MULTIPLIER', 1))
+        max_timeout = 120 * float(os.environ.get('MAX_TIMEOUT_MULTIPLIER', 1))
         backoff = 1
         end_at = time.time() + max_timeout
         tries = 1
         auto_port = (self.port is None)
+        orange_start = time.monotonic()
         while time.time() < end_at:
             if auto_port:
                 self.port = get_open_port()
@@ -227,6 +228,8 @@ class ZookeeperFixture(Fixture):
             backoff += 1
         else:
             raise RuntimeError('Failed to start Zookeeper before max_timeout')
+        with open("/tmp/orange", "w") as orange_f:
+            orange_f.write("open " + str(time.monotonic() - orange_start) + "\n")
         self.out("Done!")
         atexit.register(self.close)
 
@@ -421,12 +424,13 @@ class KafkaFixture(Fixture):
             env['KAFKA_OPTS'] = opts
             self.render_template(jaas_conf_template, jaas_conf, vars(self))
 
-        timeout = 5
-        max_timeout = 120
+        timeout = 5 * float(os.environ.get('RETRY_TIMEOUT_MULTIPLIER', 1))
+        max_timeout = 120 * float(os.environ.get('MAX_TIMEOUT_MULTIPLIER', 1))
         backoff = 1
         end_at = time.time() + max_timeout
         tries = 1
         auto_port = (self.port is None)
+        orange_start = time.monotonic()
         while time.time() < end_at:
             # We have had problems with port conflicts on travis
             # so we will try a different port on each retry
@@ -451,6 +455,8 @@ class KafkaFixture(Fixture):
             backoff += 1
         else:
             raise RuntimeError('Failed to start KafkaInstance before max_timeout')
+        with open("/tmp/orange", "w") as orange_f:
+            orange_f.write("start " + str(time.monotonic() - orange_start) + "\n")
 
         (self._client,) = self.get_clients(1, client_id='_internal_client')
 
