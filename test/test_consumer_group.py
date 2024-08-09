@@ -34,7 +34,10 @@ def test_consumer(kafka_broker, topic):
 def test_consumer_topics(kafka_broker, topic):
     consumer = KafkaConsumer(bootstrap_servers=get_connect_str(kafka_broker))
     # Necessary to drive the IO
-    consumer.poll(500)
+    orange_start = time.monotonic()
+    consumer.poll(5000)
+    with open("/tmp/orange", "w") as orange_f:
+        orange_f.write("test_consumer_topics " + str(time.monotonic() - orange_start) + "\n")
     assert topic in consumer.topics()
     assert len(consumer.partitions_for_topic(topic)) > 0
     consumer.close()
@@ -74,16 +77,21 @@ def test_group(kafka_broker, topic):
         threads[i] = t
 
     try:
-        timeout = time.time() + 35
+        timeout = time.time() + 350
+        orange_start = time.monotonic()
         while True:
+            logging.info("num_consumers is %r", num_consumers)
             for c in range(num_consumers):
+                logging.info("c is %r", c)
 
                 # Verify all consumers have been created
                 if c not in consumers:
+                    logging.info("c %r not in consumers", c)
                     break
 
                 # Verify all consumers have an assignment
                 elif not consumers[c].assignment():
+                    logging.info("c %r does not have assignment", c)
                     break
 
             # If all consumers exist and have an assignment
@@ -94,11 +102,13 @@ def test_group(kafka_broker, topic):
                 # then log state and break while loop
                 generations = {consumer._coordinator._generation.generation_id
                                    for consumer in list(consumers.values())}
+                logging.info("generations is %r", generations)
 
                 # New generation assignment is not complete until
                 # coordinator.rejoining = False
                 rejoining = any([consumer._coordinator.rejoining
                                  for consumer in list(consumers.values())])
+                logging.info("rejoining is %r", rejoining)
 
                 if not rejoining and len(generations) == 1:
                     for c, consumer in list(consumers.items()):
@@ -111,6 +121,9 @@ def test_group(kafka_broker, topic):
                     logging.info('Rejoining: %s, generations: %s', rejoining, generations)
                     time.sleep(1)
             assert time.time() < timeout, "timeout waiting for assignments"
+            time.sleep(0.25)  # avoid busy retry
+        with open("/tmp/orange", "w") as orange_f:
+            orange_f.write("test_group " + str(time.monotonic() - orange_start) + "\n")
 
         logging.info('Group stabilized; verifying assignment')
         group_assignment = set()

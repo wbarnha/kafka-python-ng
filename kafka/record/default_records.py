@@ -187,14 +187,12 @@ class DefaultRecordBatch(DefaultRecordBase, ABCRecordBatch):
                 data = memoryview(self._buffer)[self._pos:]
                 if compression_type == self.CODEC_GZIP:
                     uncompressed = gzip_decode(data)
-                elif compression_type == self.CODEC_SNAPPY:
+                if compression_type == self.CODEC_SNAPPY:
                     uncompressed = snappy_decode(data.tobytes())
-                elif compression_type == self.CODEC_LZ4:
+                if compression_type == self.CODEC_LZ4:
                     uncompressed = lz4_decode(data.tobytes())
-                elif compression_type == self.CODEC_ZSTD:
+                if compression_type == self.CODEC_ZSTD:
                     uncompressed = zstd_decode(data.tobytes())
-                else:
-                    raise NotImplementedError(f"Compression type {compression_type} is not supported")
                 self._buffer = bytearray(uncompressed)
                 self._pos = 0
         self._decompressed = True
