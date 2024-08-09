@@ -612,9 +612,8 @@ class KafkaFixture(Fixture):
 
     def get_topic_names(self):
         args = self.kafka_run_class_args('kafka.admin.TopicCommand',
-                                         '--zookeeper', '%s:%s/%s' % (self.zookeeper.host,
-                                                                      self.zookeeper.port,
-                                                                      self.zk_chroot),
+                                         '--bootstrap-server',
+                                         '%s:%s' % (self.host, self.port),
                                          '--list'
                                          )
         env = self.kafka_run_class_env()
