@@ -47,9 +47,9 @@ class SpawnedService(threading.Thread):
         self.daemon = True
         log.info("Created service for command:")
         log.info(" "+' '.join(self.args))
-        log.debug("With environment:")
-        for key, value in self.env.items():
-            log.debug("  {key}={value}".format(key=key, value=value))
+        #log.debug("With environment:")
+        #for key, value in self.env.items():
+        #    log.debug("  {key}={value}".format(key=key, value=value))
 
     def _spawn(self):
         if self.alive: return
@@ -62,6 +62,7 @@ class SpawnedService(threading.Thread):
             bufsize=1,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
+        log.info("PID %r args %r", self.child.pid, self.args)
         self.alive = self.child.poll() is None
 
     def _despawn(self):
@@ -108,6 +109,9 @@ class SpawnedService(threading.Thread):
     def dump_logs(self):
         sys.stderr.write('\n'.join(self.captured_stderr))
         sys.stdout.write('\n'.join(self.captured_stdout))
+        with open("/tmp/orange", "a") as orange_f:
+            orange_f.write('\n'.join(self.captured_stderr))
+            orange_f.write('\n'.join(self.captured_stdout))
 
     def wait_for(self, pattern, timeout=30):
         start = time.time()

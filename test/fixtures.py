@@ -141,16 +141,16 @@ class Fixture(object):
         dirfd = os.open(os.path.dirname(target_file.strpath), os.O_DIRECTORY)
         os.fsync(dirfd)
         os.close(dirfd)
-        log.debug("Template string:")
-        for line in template.splitlines():
-            log.debug('  ' + line.strip())
-        log.debug("Rendered template:")
-        with open(target_file.strpath, 'r') as o:
-            for line in o:
-                log.debug('  ' + line.strip())
-        log.debug("binding:")
-        for key, value in binding.items():
-            log.debug("  {key}={value}".format(key=key, value=value))
+        #log.debug("Template string:")
+        #for line in template.splitlines():
+        #    log.debug('  ' + line.strip())
+        #log.debug("Rendered template:")
+        #with open(target_file.strpath, 'r') as o:
+        #    for line in o:
+        #        log.debug('  ' + line.strip())
+        #log.debug("binding:")
+        #for key, value in binding.items():
+        #    log.debug("  {key}={value}".format(key=key, value=value))
 
     def dump_logs(self):
         self.child.dump_logs()
@@ -228,7 +228,7 @@ class ZookeeperFixture(Fixture):
             backoff += 1
         else:
             raise RuntimeError('Failed to start Zookeeper before max_timeout')
-        with open("/tmp/orange", "w") as orange_f:
+        with open("/tmp/orange", "a") as orange_f:
             orange_f.write("open " + str(time.monotonic() - orange_start) + "\n")
         self.out("Done!")
         atexit.register(self.close)
@@ -361,6 +361,7 @@ class KafkaFixture(Fixture):
         )
         env = self.kafka_run_class_env()
         proc = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        log.info("PID %r args %r", proc.pid, args)
 
         stdout, stderr = proc.communicate()
 
@@ -397,6 +398,7 @@ class KafkaFixture(Fixture):
                                          "kafka-python")
         env = self.kafka_run_class_env()
         proc = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        log.info("PID %r args %r", proc.pid, args)
 
         stdout, stderr = proc.communicate()
 
@@ -455,7 +457,7 @@ class KafkaFixture(Fixture):
             backoff += 1
         else:
             raise RuntimeError('Failed to start KafkaInstance before max_timeout')
-        with open("/tmp/orange", "w") as orange_f:
+        with open("/tmp/orange", "a") as orange_f:
             orange_f.write("start " + str(time.monotonic() - orange_start) + "\n")
 
         (self._client,) = self.get_clients(1, client_id='_internal_client')
@@ -464,7 +466,12 @@ class KafkaFixture(Fixture):
         self.running = True
 
     def _broker_ready(self, timeout):
-        return self.child.wait_for(self.start_pattern, timeout=timeout)
+        #return self.child.wait_for(self.start_pattern, timeout=timeout)
+        try:
+            orange_w = self.child.wait_for(self.start_pattern, timeout=timeout)
+            return orange_w
+        except RuntimeError:
+            self.child.join()
 
     def _scram_user_present(self, timeout):
         # no need to wait for scram user if scram is not used
@@ -608,6 +615,7 @@ class KafkaFixture(Fixture):
             args.append('--if-not-exists')
         env = self.kafka_run_class_env()
         proc = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        log.info("PID %r args %r", proc.pid, args)
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
             if 'kafka.common.TopicExistsException' not in stdout:
@@ -626,6 +634,7 @@ class KafkaFixture(Fixture):
         env = self.kafka_run_class_env()
         env.pop('KAFKA_LOG4J_OPTS')
         proc = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        log.info("PID %r args %r", proc.pid, args)
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
             self.out("Failed to list topics!")
@@ -643,6 +652,7 @@ class KafkaFixture(Fixture):
         for key, value in defaults.items():
             params.setdefault(key, value)
         params.setdefault('bootstrap_servers', self.bootstrap_server())
+        params.setdefault('api_version_auto_timeout_ms', KafkaClient.DEFAULT_CONFIG.get('api_version_auto_timeout_ms', 2000) * float(os.environ.get('MAX_TIMEOUT_MULTIPLIER', 1)))
         if self.sasl_enabled:
             params.setdefault('sasl_mechanism', self.sasl_mechanism)
             params.setdefault('security_protocol', self.transport)
