@@ -55,15 +55,20 @@ class SpawnedService(threading.Thread):
         if self.alive: return
         if self.child and self.child.poll() is None: return
 
-        self.child = subprocess.Popen(
-            self.args,
-            preexec_fn=os.setsid, # to avoid propagating signals
-            env=self.env,
-            bufsize=1,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+        log.info("spawning")
+        try:
+            self.child = subprocess.Popen(
+                self.args,
+                preexec_fn=os.setsid, # to avoid propagating signals
+                env=self.env,
+                bufsize=1,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
+        except Exception as e:
+            log.warning("swapning error %r", e)
         log.info("PID %r args %r", self.child.pid, self.args)
         self.alive = self.child.poll() is None
+        log.info("alive is  %r", self.alive)
 
     def _despawn(self):
         if self.child.poll() is None:
@@ -83,6 +88,7 @@ class SpawnedService(threading.Thread):
             try:
                 (rds, _, _) = select.select([self.child.stdout, self.child.stderr], [], [], 1)
             except select.error as ex:
+                log.warning("select error: %r", ex)
                 if ex.args[0] == 4:
                     continue
                 else:
@@ -100,10 +106,12 @@ class SpawnedService(threading.Thread):
 
             if self.child.poll() is not None:
                 self.dump_logs()
+                log.warning("dump log and break")
                 break
 
             if self.should_die.is_set():
                 self._despawn()
+                log.warning("despawn and break")
                 break
 
     def dump_logs(self):
@@ -117,7 +125,8 @@ class SpawnedService(threading.Thread):
         start = time.time()
         while True:
             if not self.is_alive():
-                raise RuntimeError("Child thread died already.")
+                self.join()
+                #raise RuntimeError("Child thread died already.")
 
             elapsed = time.time() - start
             if elapsed >= timeout:

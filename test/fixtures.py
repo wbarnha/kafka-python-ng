@@ -218,8 +218,11 @@ class ZookeeperFixture(Fixture):
             self.child = SpawnedService(args, env)
             self.child.start()
             timeout = min(timeout, max(end_at - time.time(), 0))
-            if self.child.wait_for(r"binding to port", timeout=timeout):
-                break
+            try:
+                if self.child.wait_for(r"binding to port", timeout=timeout):
+                    break
+            except RuntimeError:
+                self.child.join()
             self.child.dump_logs()
             self.child.stop()
             timeout *= 2
