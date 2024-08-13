@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ "$SHLVL" != "1" ] || [ "$PS1" == "" ]; then
+    echo "Error: Please source, not run. Example '. $(basename $0)'"
+    exit 1
+fi
+
+export KAFKA_VERSION=2.6.0
+export PATH=${HOME}/.venvs/bin:${PATH}
+. travis_java_install.sh
+

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+export KAFKA_VERSION=2.6.0
+export PATH=${HOME}/.venvs/bin:${PATH}
+
+python -m build
+. travis_java_install.sh
+./build_integration.sh
+
+pip install .
+pip install -r requirements-dev.txt
+
