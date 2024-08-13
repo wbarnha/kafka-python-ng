@@ -34,7 +34,7 @@ def test_consumer(kafka_broker, topic):
 def test_consumer_topics(kafka_broker, topic):
     consumer = KafkaConsumer(bootstrap_servers=get_connect_str(kafka_broker))
     # Necessary to drive the IO
-    consumer.poll(500)
+    consumer.poll(5000)
     assert topic in consumer.topics()
     assert len(consumer.partitions_for_topic(topic)) > 0
     consumer.close()

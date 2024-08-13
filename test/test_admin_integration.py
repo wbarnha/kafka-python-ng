@@ -126,13 +126,36 @@ def test_describe_configs_mixed_resources_returns_configs(topic, kafka_admin_cli
         ConfigResource(ConfigResourceType.BROKER, broker_id)])
 
     assert len(configs) == 2
+    retry = False
 
     for config in configs:
         assert (config.resources[0][2] == ConfigResourceType.TOPIC
                 and config.resources[0][3] == topic) or \
                (config.resources[0][2] == ConfigResourceType.BROKER
                 and config.resources[0][3] == str(broker_id))
+        #assert len(config.resources[0][4]) > 1
+        if not (len(config.resources[0][4]) > 1):
+            retry = True
+
+    if not retry:
+        return
+
+    sleep(10)
+
+    broker_id = kafka_admin_client._client.cluster._brokers[0].nodeId
+    configs = kafka_admin_client.describe_configs([
+        ConfigResource(ConfigResourceType.TOPIC, topic),
+        ConfigResource(ConfigResourceType.BROKER, broker_id)])
+
+    assert len(configs) == 2
+    for config in configs:
+        assert (config.resources[0][2] == ConfigResourceType.TOPIC
+                and config.resources[0][3] == topic) or \
+               (config.resources[0][2] == ConfigResourceType.BROKER
+                and config.resources[0][3] == str(broker_id))
         assert len(config.resources[0][4]) > 1
+
+    assert False
 
 
 @pytest.mark.skipif(env_kafka_version() < (0, 11), reason="Describe config features require broker >=0.11")

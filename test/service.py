@@ -126,7 +126,7 @@ class SpawnedService(threading.Thread):
         while True:
             if not self.is_alive():
                 self.join()
-                #raise RuntimeError("Child thread died already.")
+                raise RuntimeError("Child thread died already.")
 
             elapsed = time.time() - start
             if elapsed >= timeout:
