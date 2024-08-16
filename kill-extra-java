@@ -1,0 +1,13 @@
+#!/bin/bash
+
+while [ true ]; do
+    ps auxf | grep -v grep | grep kafka.pro | awk '{print $2}' > kafka-pids
+    kafka_count=$(cat kafka-pids | wc -l)
+    if [ $kafka_count -ge 2 ]; then
+        kafka_kill_pid=$(head -n 1 kafka-pids)
+	date "+%F %T " | tr -d "\n"
+	echo "Detected $kafka_count Kafka, killing $kafka_kill_pid"
+	kill $kafka_kill_pid
+    fi
+    sleep 1
+done
