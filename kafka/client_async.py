@@ -754,6 +754,7 @@ class KafkaClient:
             node_id or None if no suitable node was found
         """
         nodes = [broker.nodeId for broker in self.cluster.brokers()]
+        log.debug("least_loaded_node %r", nodes)
         random.shuffle(nodes)
 
         inflight = float('inf')

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+export KAFKA_VERSION=2.6.0
+sudo apt-get update
+sudo apt-get -y install python3 python3-pip python3-venv openjdk-11-jre libsnappy-dev libzstd-dev python3-full
+
+mkdir -p ${HOME}/.venvs
+python3 -m venv ${HOME}/.venvs
+export PATH=${HOME}/.venvs/bin:${PATH}
+
+pip3 install build
+python -m build
+. travis_java_install.sh
+./build_integration.sh
+python -m pip install tox
+
+pip install .
+pip install -r requirements-dev.txt
+

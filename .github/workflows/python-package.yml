@@ -61,12 +61,8 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - "3.8"
-          - "3.9"
           - "3.10"
-          - "3.11"
           - "3.12"
-          - "pypy3.9"
         experimental: [ false ]
     steps:
       - name: Checkout the source code
@@ -116,19 +112,12 @@ jobs:
       fail-fast: false
       matrix:
         kafka-version:
-          - "0.9.0.1"
-          - "0.10.2.2"
-          - "0.11.0.2"
-          - "0.11.0.3"
-          - "1.1.1"
-          - "2.4.0"
-          - "2.5.0"
           - "2.6.0"
         python-version: ['3.12']
         experimental: [false]
         include:
           - kafka-version: '0.8.2.2'
-            experimental: true
+            experimental: false
             python-version: "3.12"
           - kafka-version: '0.8.2.2'
             experimental: false

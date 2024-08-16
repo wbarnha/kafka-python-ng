@@ -47,22 +47,28 @@ class SpawnedService(threading.Thread):
         self.daemon = True
         log.info("Created service for command:")
         log.info(" "+' '.join(self.args))
-        log.debug("With environment:")
-        for key, value in self.env.items():
-            log.debug("  {key}={value}".format(key=key, value=value))
+        #log.debug("With environment:")
+        #for key, value in self.env.items():
+        #    log.debug("  {key}={value}".format(key=key, value=value))
 
     def _spawn(self):
         if self.alive: return
         if self.child and self.child.poll() is None: return
 
-        self.child = subprocess.Popen(
-            self.args,
-            preexec_fn=os.setsid, # to avoid propagating signals
-            env=self.env,
-            bufsize=1,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+        log.info("spawning")
+        try:
+            self.child = subprocess.Popen(
+                self.args,
+                preexec_fn=os.setsid, # to avoid propagating signals
+                env=self.env,
+                bufsize=1,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
+        except Exception as e:
+            log.warning("swapning error %r", e)
+        log.info("PID %r args %r", self.child.pid, self.args)
         self.alive = self.child.poll() is None
+        log.info("alive is  %r", self.alive)
 
     def _despawn(self):
         if self.child.poll() is None:
@@ -82,6 +88,7 @@ class SpawnedService(threading.Thread):
             try:
                 (rds, _, _) = select.select([self.child.stdout, self.child.stderr], [], [], 1)
             except select.error as ex:
+                log.warning("select error: %r", ex)
                 if ex.args[0] == 4:
                     continue
                 else:
@@ -99,20 +106,26 @@ class SpawnedService(threading.Thread):
 
             if self.child.poll() is not None:
                 self.dump_logs()
+                log.warning("dump log and break")
                 break
 
             if self.should_die.is_set():
                 self._despawn()
+                log.warning("despawn and break")
                 break
 
     def dump_logs(self):
         sys.stderr.write('\n'.join(self.captured_stderr))
         sys.stdout.write('\n'.join(self.captured_stdout))
+        with open("/tmp/orange", "a") as orange_f:
+            orange_f.write('\n'.join(self.captured_stderr))
+            orange_f.write('\n'.join(self.captured_stdout))
 
     def wait_for(self, pattern, timeout=30):
         start = time.time()
         while True:
             if not self.is_alive():
+                self.join()
                 raise RuntimeError("Child thread died already.")
 
             elapsed = time.time() - start

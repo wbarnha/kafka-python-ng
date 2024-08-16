@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e -x
+
+while [ true ]; do
+    tox
+    sleep 10
+done
+
