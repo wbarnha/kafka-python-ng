@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export KAFKA_VERSION=0.8.2.2
+export KAFKA_VERSION=2.6.0
 export PATH=${HOME}/.venvs/bin:${PATH}
 
 python -m build

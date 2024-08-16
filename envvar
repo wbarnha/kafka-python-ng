@@ -5,7 +5,7 @@ if [ "$SHLVL" != "1" ] || [ "$PS1" == "" ]; then
     exit 1
 fi
 
-export KAFKA_VERSION=0.8.2.2
+export KAFKA_VERSION=2.6.0
 export PATH=${HOME}/.venvs/bin:${PATH}
 . travis_java_install.sh
 
