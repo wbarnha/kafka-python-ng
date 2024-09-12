@@ -19,7 +19,8 @@ from kafka.protocol.admin import (
     ListGroupsRequest, DescribeGroupsRequest, DescribeAclsRequest, CreateAclsRequest, DeleteAclsRequest,
     DeleteGroupsRequest, DescribeLogDirsRequest
 )
-from kafka.protocol.commit import GroupCoordinatorRequest, OffsetFetchRequest
+from kafka.admin.coordinator_type import CoordinatorType
+from kafka.protocol.commit import OffsetFetchRequest, FindCoordinatorRequest
 from kafka.protocol.metadata import MetadataRequest
 from kafka.protocol.types import Array
 from kafka.structs import TopicPartition, OffsetAndMetadata, MemberInformation, GroupInformation
@@ -217,6 +218,7 @@ class KafkaAdminClient:
 
         self._closed = False
         self._refresh_controller_id()
+        self._cluster_metadata = self._get_cluster_metadata().to_object()
         log.debug("KafkaAdminClient started.")
 
     def close(self):
@@ -294,18 +296,14 @@ class KafkaAdminClient:
             name as a string.
         :return: A message future
         """
-        # TODO add support for dynamically picking version of
-        # GroupCoordinatorRequest which was renamed to FindCoordinatorRequest.
-        # When I experimented with this, the coordinator value returned in
-        # GroupCoordinatorResponse_v1 didn't match the value returned by
-        # GroupCoordinatorResponse_v0 and I couldn't figure out why.
-        version = 0
-        # version = self._matching_api_version(GroupCoordinatorRequest)
+        version = self._matching_api_version(FindCoordinatorRequest)
         if version <= 0:
-            request = GroupCoordinatorRequest[version](group_id)
+            request = FindCoordinatorRequest[version](group_id)
+        elif version >= 1:
+            request = FindCoordinatorRequest[version](group_id, CoordinatorType.GROUP)
         else:
             raise NotImplementedError(
-                "Support for GroupCoordinatorRequest_v{} has not yet been added to KafkaAdminClient."
+                "Support for FindCoordinatorRequest_v{} has not yet been added to KafkaAdminClient."
                 .format(version))
         return self._send_request_to_node(self._client.least_loaded_node(), request)
 
@@ -325,7 +323,7 @@ class KafkaAdminClient:
                     .format(response))
         else:
             raise NotImplementedError(
-                "Support for FindCoordinatorRequest_v{} has not yet been added to KafkaAdminClient."
+                "Support for FindCoordinatorResponse_v{} has not yet been added to KafkaAdminClient."
                 .format(response.API_VERSION))
         return response.coordinator_id
 
@@ -514,20 +512,18 @@ class KafkaAdminClient:
         return future.value
 
     def list_topics(self):
-        metadata = self._get_cluster_metadata(topics=None)
-        obj = metadata.to_object()
-        return [t['topic'] for t in obj['topics']]
+        metadata = copy.copy(self._cluster_metadata)
+        topics = metadata.pop('topics')
+        return [m['topic'] for m in topics]
 
     def describe_topics(self, topics=None):
-        metadata = self._get_cluster_metadata(topics=topics)
-        obj = metadata.to_object()
-        return obj['topics']
+        metadata = copy.copy(self._cluster_metadata)
+        return metadata.pop('topics')
 
     def describe_cluster(self):
-        metadata = self._get_cluster_metadata()
-        obj = metadata.to_object()
-        obj.pop('topics')  # We have 'describe_topics' for this
-        return obj
+        metadata = copy.copy(self._cluster_metadata)
+        metadata.pop('topics') # describe_topics is for this
+        return metadata
 
     @staticmethod
     def _convert_describe_acls_response_to_acls(describe_response):
