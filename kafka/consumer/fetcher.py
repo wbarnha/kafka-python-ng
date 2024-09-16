@@ -851,7 +851,7 @@ class Fetcher:
 
             elif error_type is Errors.TopicAuthorizationFailedError:
                 log.warning("Not authorized to read from topic %s.", tp.topic)
-                raise Errors.TopicAuthorizationFailedError(set(tp.topic))
+                raise Errors.TopicAuthorizationFailedError(tp.topic)
             elif error_type is Errors.UnknownError:
                 log.warning("Unknown error fetching data for topic-partition %s", tp)
             else:

@@ -701,6 +701,8 @@ class KafkaProducer:
             self._sender.wakeup()
             metadata_event.wait(max_wait - elapsed)
             elapsed = time.time() - begin
+            if future.exception:
+                raise future.exception
             if not metadata_event.is_set():
                 raise Errors.KafkaTimeoutError(
                     f"Failed to update metadata after {max_wait:.1f} secs.")
