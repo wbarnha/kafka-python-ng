@@ -209,14 +209,20 @@ class KafkaAdminClient:
             metric_group_prefix='admin',
             **self.config
         )
-        self._client.check_version(timeout=(self.config['api_version_auto_timeout_ms'] / 1000))
+        try:
+            self._client.check_version(timeout=(self.config['api_version_auto_timeout_ms'] / 1000))
 
-        # Get auto-discovered version from client if necessary
-        if self.config['api_version'] is None:
-            self.config['api_version'] = self._client.config['api_version']
+            # Get auto-discovered version from client if necessary
+            if self.config['api_version'] is None:
+                self.config['api_version'] = self._client.config['api_version']
 
-        self._closed = False
-        self._refresh_controller_id()
+            self._closed = False
+            self._refresh_controller_id()
+        except Exception:
+            self._metrics.close()
+            self._client.close()  # prevent FD leak
+            self._closed = True
+            raise
         log.debug("KafkaAdminClient started.")
 
     def close(self):
