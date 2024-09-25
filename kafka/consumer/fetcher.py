@@ -698,7 +698,7 @@ class Fetcher:
                 log.log(0, "Skipping fetch for partition %s because there is an inflight request to node %s",
                         partition, node_id)
 
-        if self.config["api_version"] >= (2, 6, 0):
+        if self.config["api_version"] >= (2, 1, 0):
             version = 10
         elif self.config['api_version'] >= (0, 11, 0):
             version = 4
