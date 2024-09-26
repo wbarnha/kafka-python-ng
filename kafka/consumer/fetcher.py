@@ -730,8 +730,8 @@ class Fetcher:
                 random.shuffle(partition_data)
                 if version == 10:
                     partitions = [
-                        [x[0], [[x[1][0][0], 0, x[1][0][1], 0, x[1][0][2]]]] for x in
-                        partition_data
+                        [topic, [[info[0][0], 0, info[0][1], 0, info[0][2]]]]
+                        for topic, info in partition_data
                     ]
                     requests[node_id] = FetchRequest[version](
                         -1,  # replica_id
