@@ -1,7 +1,7 @@
 # Some simple testing tasks (sorry, UNIX only).
 
 FLAGS=
-KAFKA_VERSION=0.11.0.2
+KAFKA_VERSION=3.5.1
 SCALA_VERSION=2.12
 
 setup:
@@ -14,8 +14,8 @@ servers/$(KAFKA_VERSION)/kafka-bin:
 build-integration: servers/$(KAFKA_VERSION)/kafka-bin
 
 # Test and produce coverage using tox. This is the same as is run on Travis
-test37: build-integration
-	KAFKA_VERSION=$(KAFKA_VERSION) SCALA_VERSION=$(SCALA_VERSION) tox -e py37 -- $(FLAGS)
+test311: build-integration
+	KAFKA_VERSION=$(KAFKA_VERSION) SCALA_VERSION=$(SCALA_VERSION) tox -e py311 -- $(FLAGS)
 
 test27: build-integration
 	KAFKA_VERSION=$(KAFKA_VERSION) SCALA_VERSION=$(SCALA_VERSION) tox -e py27 -- $(FLAGS)

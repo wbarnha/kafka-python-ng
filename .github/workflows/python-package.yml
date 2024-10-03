@@ -16,7 +16,7 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_NO_PYTHON_VERSION_WARNING: "1"
   PYTHON_LATEST: "3.12"
-  KAFKA_LATEST: "2.6.0"
+  KAFKA_LATEST: "3.5.1"
 
   # For re-actors/checkout-python-sdist
   sdist-artifact: python-package-distributions
@@ -110,29 +110,20 @@ jobs:
     name: Tests for Kafka ${{ matrix.kafka-version }} (Python ${{ matrix.python-version }})
     needs:
       - build-sdist
+      - test-python
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         kafka-version:
-          - "0.9.0.1"
-          - "0.10.2.2"
-          - "0.11.0.2"
-          - "0.11.0.3"
           - "1.1.1"
           - "2.4.0"
           - "2.5.0"
           - "2.6.0"
+          - "2.7.0"
         python-version: ['3.12']
         experimental: [false]
-        include:
-          - kafka-version: '0.8.2.2'
-            experimental: true
-            python-version: "3.12"
-          - kafka-version: '0.8.2.2'
-            experimental: false
-            python-version: "3.10"
     env:
       PYTHON_LATEST: ${{ matrix.python-version }}
     continue-on-error: ${{ matrix.experimental }}
