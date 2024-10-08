@@ -698,7 +698,9 @@ class Fetcher:
                 log.log(0, "Skipping fetch for partition %s because there is an inflight request to node %s",
                         partition, node_id)
 
-        if self.config['api_version'] >= (0, 11, 0):
+        if self.config["api_version"] >= (2, 1, 0):
+            version = 10
+        elif self.config['api_version'] >= (0, 11, 0):
             version = 4
         elif self.config['api_version'] >= (0, 10, 1):
             version = 3
@@ -726,7 +728,23 @@ class Fetcher:
                 #       dicts retain insert order.
                 partition_data = list(partition_data.items())
                 random.shuffle(partition_data)
-                if version == 3:
+                if version == 10:
+                    partitions = [
+                        [topic, [[info[0][0], 0, info[0][1], 0, info[0][2]]]]
+                        for topic, info in partition_data
+                    ]
+                    requests[node_id] = FetchRequest[version](
+                        -1,  # replica_id
+                        self.config["fetch_max_wait_ms"],
+                        self.config["fetch_min_bytes"],
+                        self.config["fetch_max_bytes"],
+                        self._isolation_level,
+                        0,  # session_id
+                        0,  # session_epoch
+                        partitions,
+                        [],  # forgotten_topics_data
+                    )
+                elif version == 3:
                     requests[node_id] = FetchRequest[version](
                         -1,  # replica_id
                         self.config['fetch_max_wait_ms'],
